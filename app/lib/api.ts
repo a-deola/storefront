@@ -6,6 +6,5 @@ export async function fetchProducts(): Promise<Product[]> {
   );
   if (!res.ok) throw new Error("Failed to fetch products");
   const data = await res.json();
-   console.log(data);
   return data.data;
 }
