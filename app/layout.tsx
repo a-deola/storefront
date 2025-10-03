@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Open_Sans, Pacifico } from "next/font/google";
+import { CartProvider } from "./context/CartContext";
 import "./globals.css";
 
 const openSans = Open_Sans({
@@ -29,7 +30,9 @@ export default function RootLayout({
       <body
         className={`${pacifico.variable} ${openSans.variable} antialiased`}
       >
-        {children}
+        <CartProvider>
+     {children}
+        </CartProvider>
       </body>
     </html>
   );
