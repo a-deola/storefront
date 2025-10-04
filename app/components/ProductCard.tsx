@@ -25,35 +25,40 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const {addToCart} = useCart();
+  const { addToCart } = useCart();
   const [selectedColor, setSelectedColor] = useState(product.variants[0].color);
   const [selectedSize, setSelectedSize] = useState(product.variants[0].size);
-
-  const handleAddToCart = () => {
-  if (!isOutOfStock) {
-    addToCart(product, currentVariant!);
-    currentVariant!.stock -= 1;
-  }
-};
+  const [variantStocks, setVariantStocks] = useState(
+    product.variants.reduce((acc, v) => {
+      acc[v.id] = v.stock;
+      return acc;
+    }, {} as Record<string, number>)
+  );
 
   const currentVariant = product.variants.find(
     (v) => v.color === selectedColor && v.size === selectedSize
   );
-
   const colors = Array.from(new Set(product.variants.map((v) => v.color)));
-  const sizes = Array.from(new Set(product.variants.map((v) => v.size)));
-
-  const totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0);
-  const isOutOfStock = currentVariant?.stock === 0;
 
   const availableSizes = product.variants
     .filter((v) => v.color === selectedColor && v.stock > 0)
     .map((v) => v.size);
-
   const stockForDisplay =
     product.variants.length > 1
-      ? currentVariant?.stock || 0
-      : product.variants[0].stock;
+      ? variantStocks[currentVariant?.id ?? ""] || 0
+      : variantStocks[product.variants[0].id];
+
+  const isOutOfStock = stockForDisplay === 0;
+
+  const handleAddToCart = () => {
+    if (currentVariant && variantStocks[currentVariant.id] > 0) {
+      addToCart(product, currentVariant);
+      setVariantStocks((prev) => ({
+        ...prev,
+        [currentVariant.id]: prev[currentVariant.id] - 1,
+      }));
+    }
+  };
 
   useEffect(() => {
     if (!availableSizes.includes(selectedSize)) {
@@ -70,6 +75,10 @@ export default function ProductCard({ product }: ProductCardProps) {
           }
           alt={product.name}
           fill
+          sizes="(max-width: 768px) 100vw, 
+         (max-width: 1200px) 50vw, 
+         33vw"
+          priority
           className="object-contain"
         />
       </div>
@@ -120,7 +129,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         {/* Add to cart */}
         <button
-         onClick={handleAddToCart}
+          onClick={handleAddToCart}
           disabled={isOutOfStock}
           className={`mt-4 w-full py-2 rounded ${
             isOutOfStock
